@@ -1,60 +1,82 @@
-body {
-  background: #f7f7f7;
-  display: flex;
-  justify-content: center;
-  margin-top: 50px;
+const dino = document.getElementById("dino");
+const cactus = document.getElementById("cactus");
+const scoreEl = document.getElementById("score");
+const restartBtn = document.getElementById("restart");
+
+const jumpSound = document.getElementById("jumpSound");
+const hitSound = document.getElementById("hitSound");
+
+let score = 0;
+let speed = 2;
+let isAlive = true;
+let cactusPos = -30;
+
+// pulo
+document.addEventListener("keydown", (e) => {
+  if (e.code === "Space") jump();
+});
+
+function jump() {
+  if (!dino.classList.contains("jump")) {
+    dino.classList.add("jump");
+    jumpSound.currentTime = 0;
+    jumpSound.play();
+
+    setTimeout(() => {
+      dino.classList.remove("jump");
+    }, 500);
+  }
 }
 
-.game {
-  width: 600px;
-  height: 200px;
-  border: 2px solid black;
-  position: relative;
-  overflow: hidden;
-  background: white;
+// movimento
+function moveCactus() {
+  if (!isAlive) return;
+
+  cactusPos += speed;
+  cactus.style.right = cactusPos + "px";
+
+  if (cactusPos > 600) {
+    cactusPos = -30;
+    score++;
+    scoreEl.innerText = score;
+
+    if (score % 5 === 0) {
+      speed += 0.5;
+    }
+  }
+
+  requestAnimationFrame(moveCactus);
 }
 
-#score {
-  position: absolute;
-  top: 10px;
-  right: 20px;
-  font-family: Arial;
-  font-size: 20px;
+// colisão
+function checkCollision() {
+  let dinoTop = parseInt(getComputedStyle(dino).bottom);
+  let cactusRight = cactusPos;
+
+  if (cactusRight > 520 && cactusRight < 580 && dinoTop < 40) {
+    gameOver();
+  }
 }
 
-#dino {
-  width: 44px;
-  height: 47px;
-  position: absolute;
-  bottom: 0;
-  left: 50px;
-  background-image: url('dino.png'); /* sprite */
-  background-size: cover;
+function gameOver() {
+  isAlive = false;
+  hitSound.currentTime = 0;
+  hitSound.play();
+  restartBtn.style.display = "block";
 }
 
-#cactus {
-  width: 25px;
-  height: 50px;
-  position: absolute;
-  bottom: 0;
-  right: -30px;
-  background-image: url('cactus.png');
-  background-size: cover;
+// loop
+function gameLoop() {
+  if (!isAlive) return;
+  checkCollision();
+  requestAnimationFrame(gameLoop);
 }
 
-.jump {
-  animation: jump 0.5s ease;
-}
+// restart
+restartBtn.addEventListener("click", () => {
+  location.reload();
+});
 
-@keyframes jump {
-  0% { bottom: 0; }
-  50% { bottom: 110px; }
-  100% { bottom: 0; }
-}
-
-#restart {
-  position: absolute;
-  top: 80px;
-  left: 250px;
-  display: none;
-}
+// iniciar
+moveCactus();
+gameLoop();
